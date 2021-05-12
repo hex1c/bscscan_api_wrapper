@@ -5,7 +5,7 @@ name = "bscscan_wrapper"
 version = "0.1.0"
 repository="https://github.com/hex1c/bscscan_api_wrapper"
 description="This is a wrapper to bscchain api to get data from BSC chain"
-keywords = ["binance smart chain", "bsc", "bscchain api"]
+keywords = ["binance_smart_chain", "bsc", "bscchain_api"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
