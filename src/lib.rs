@@ -1,8 +1,8 @@
 #[allow(dead_code)]
-mod bsc_wrapper;
+pub mod bsc_wrapper;
 #[allow(dead_code)]
-mod error;
+pub mod error;
 #[allow(dead_code)]
-mod query_handler;
+pub mod query_handler;
 #[allow(dead_code)]
-mod wei_convertor;
+pub mod wei_convertor;

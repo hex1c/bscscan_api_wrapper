@@ -1,5 +1,6 @@
-use super::{accounts::NormalResponse, BscChainApi};
-use crate::error::CustomErrors;
+use super::{accounts::Response, BscChainApi};
+use crate::error::{CustomErrors, ErrorCause};
+use ethabi::Contract;
 use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct Code {
@@ -30,73 +31,68 @@ pub struct Code {
 }
 
 impl Code {
-    pub async fn sourcecode(&self) -> String {
+    pub fn sourcecode(&self) -> String {
         self.sourcecode.clone()
     }
 
-    pub async fn contract_name(&self) -> String {
+    pub fn contract_name(&self) -> String {
         self.contract_name.clone()
     }
 
-    pub async fn compile_version(&self) -> String {
+    pub fn compile_version(&self) -> String {
         self.compile_version.clone()
     }
 
-    pub async fn optimization_used(&self) -> String {
+    pub fn optimization_used(&self) -> String {
         self.optimization_used.clone()
     }
 
-    pub async fn runs(&self) -> String {
+    pub fn runs(&self) -> String {
         self.runs.clone()
     }
 
-    pub async fn constructor_arguments(&self) -> String {
+    pub fn constructor_arguments(&self) -> String {
         self.constructor_arguments.clone()
     }
 
-    pub async fn evm_version(&self) -> String {
+    pub fn evm_version(&self) -> String {
         self.evm_version.clone()
     }
 
-    pub async fn library(&self) -> String {
+    pub fn library(&self) -> String {
         self.library.clone()
     }
 
-    pub async fn license_type(&self) -> String {
+    pub fn license_type(&self) -> String {
         self.license_type.clone()
     }
 
-    pub async fn proxy(&self) -> String {
+    pub fn proxy(&self) -> String {
         self.proxy.clone()
     }
 
-    pub async fn implementation(&self) -> String {
+    pub fn implementation(&self) -> String {
         self.implementation.clone()
     }
 
-    pub async fn swarm_source(&self) -> String {
+    pub fn swarm_source(&self) -> String {
         self.swarm_source.clone()
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct SourceCode {
-    status: String,
-    message: String,
-    result: Vec<Code>,
+impl Response<Vec<Code>> {
+    pub async fn parse_str(response: String) -> Response<Vec<Code>> {
+        serde_json::from_str::<Response<Vec<Code>>>(&response).unwrap()
+    }
 }
 
-impl SourceCode {
-    pub async fn parse_str(response: String) -> SourceCode {
-        serde_json::from_str::<SourceCode>(&response).unwrap()
-    }
+impl Response<Contract> {
+    pub async fn parse_str(response: String) -> Result<Response<Contract>, CustomErrors> {
+        let m = serde_json::from_str::<Response<String>>(&response).unwrap();
+        let r = Contract::load(m.result().as_bytes())
+            .map_err(|_| CustomErrors::new(ErrorCause::AbiParsingError))?;
 
-    pub async fn status(&self) -> String {
-        self.status.clone()
-    }
-
-    pub async fn message(&self) -> String {
-        self.message.clone()
+        Ok(Response::<Contract>::new(m.status(), m.message(), r))
     }
 }
 
@@ -104,13 +100,13 @@ impl<'a> BscChainApi<'a> {
     pub async fn get_abi(
         &mut self,
         smart_contarct_address: &str,
-    ) -> Result<NormalResponse, CustomErrors> {
+    ) -> Result<Response<Contract>, CustomErrors> {
         self.query.add_params("apikey", self.api_key);
         self.query.add_params("module", "contract");
         self.query.add_params("action", "getabi");
         self.query.add_params("address", smart_contarct_address);
 
-        Ok(NormalResponse::parse_str(
+        Ok(Response::<Contract>::parse_str(
             self.client
                 .get(self.query.build_url())
                 .send()
@@ -118,19 +114,19 @@ impl<'a> BscChainApi<'a> {
                 .text()
                 .await?,
         )
-        .await)
+        .await?)
     }
 
     pub async fn get_source_code(
         &mut self,
         smart_contarct_address: &str,
-    ) -> Result<SourceCode, CustomErrors> {
+    ) -> Result<Response<Vec<Code>>, CustomErrors> {
         self.query.add_params("apikey", self.api_key);
         self.query.add_params("module", "contract");
         self.query.add_params("action", "getsourcecode");
         self.query.add_params("address", smart_contarct_address);
 
-        Ok(SourceCode::parse_str(
+        Ok(Response::<Vec<Code>>::parse_str(
             self.client
                 .get(self.query.build_url())
                 .send()
@@ -145,36 +141,33 @@ impl<'a> BscChainApi<'a> {
 // #[cfg(test)]
 // mod test {
 //     use super::*;
-//     // use actix_rt;
 
 //     fn create_success<'a>() -> BscChainApi<'a> {
-//         BscChainApi::new("YOUR API KEY HERE")
+//         BscChainApi::new("91FMGW3IAKTNBCQ4FH1IITRG92411S8DRZ")
 //     }
 
-    // #[actix_rt::test]
-    // async fn abi_get() {
-    //     let mut m = create_success();
-    //     assert_eq!(
-    //         m.get_abi("0xBCfCcbde45cE874adCB698cC183deBcF17952812")
-    //             .await
-    //             .unwrap()
-    //             .status()
-    //             .await,
-    //         "1".to_string()
-    //     );
-    // }
+//     #[actix_rt::test]
+//     async fn abi_get() {
+//         let mut m = create_success();
+//         assert_eq!(
+//             m.get_abi("0xBCfCcbde45cE874adCB698cC183deBcF17952812")
+//                 .await
+//                 .unwrap()
+//                 .status(),
+//             "1".to_string()
+//         );
+//     }
 
-    // #[actix_rt::test]
-    // async fn get_source_code() {
-    //     let mut m = create_success();
-    //     assert_eq!(
-    //         m.get_source_code("0xBCfCcbde45cE874adCB698cC183deBcF17952812")
-    //             .await
-    //             .unwrap()
-    //             .result[0]
-    //             .contract_name()
-    //             .await,
-    //         "PancakeFactory".to_string()
-    //     );
-    // }
+//     #[actix_rt::test]
+//     async fn get_source_code() {
+//         let mut m = create_success();
+//         assert_eq!(
+//             m.get_source_code("0xBCfCcbde45cE874adCB698cC183deBcF17952812")
+//                 .await
+//                 .unwrap()
+//                 .result()[0]
+//                 .contract_name(),
+//             "PancakeFactory".to_string()
+//         );
+//     }
 // }

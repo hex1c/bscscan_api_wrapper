@@ -1,15 +1,17 @@
 [package]
-authors = ["hex1c"]
+authors = ["hex1c <hex1c@protonmail.com>"]
+description = "This is a wrapper to bscchain api to get data from BSC chain"
 edition = "2018"
-name = "bscscan_wrapper"
-version = "0.1.0"
-repository="https://github.com/hex1c/bscscan_api_wrapper"
-description="This is a wrapper to bscchain api to get data from BSC chain"
 keywords = ["binance_smart_chain", "bsc", "bscchain_api"]
+name = "bscscan_wrapper"
+repository = "https://github.com/hex1c/bscscan_api_wrapper"
+version = "0.1.0"
+license="MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# actix-rt = "2.2" dev dependency
+actix-rt = "2.2" #dev dependency
 reqwest = "0.11"
 serde = {version = "1.0.118", features = ["derive"]}
 serde_json = "1"
+ethabi="13.0"

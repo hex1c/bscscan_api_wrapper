@@ -8,6 +8,7 @@ pub enum ErrorCause {
     ConnectionError,
     DecodeError,
     BodyError,
+    AbiParsingError,
 }
 
 #[derive(Debug)]
@@ -51,6 +52,7 @@ impl CustomErrors {
                 BodyError => "Body Error".to_string(),
                 ConnectionError => "Internet Connection Error".to_string(),
                 DecodeError => "Decode Body Error".to_string(),
+                AbiParsingError => "Abi Parsing Error".to_string()
             },
             cause,
         }
